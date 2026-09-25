@@ -1,0 +1,6 @@
+{
+  "name": "Back to the Future: Reversed - Community Development Board",
+  "description": "Retro 1985 CRT terminal feedback and bug tracking system for Back to the Future: Reversed.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

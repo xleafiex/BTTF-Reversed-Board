@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --crt-cyan: #00f0ff;
+    --crt-orange: #ff4800;
+    --crt-yellow: #ffcc00;
+    --crt-green: #33ff77;
+    --crt-bg: #03080e;
+  }
+
+  body {
+    background-color: #030508;
+    color: #00f0ff;
+    font-family: 'Perfect DOS VGA 437', 'VT323', 'Fixedsys', 'Courier New', 'Share Tech Mono', monospace;
+    letter-spacing: 0.04em;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+  }
+}
+
+/* 80s DOS System Font Class */
+.font-dos {
+  font-family: 'Perfect DOS VGA 437', 'VT323', 'Fixedsys', 'Courier New', monospace;
+  -webkit-font-smoothing: none;
+}
+
+/* CRT Screen styling */
+.crt-glow-cyan {
+  color: #00f0ff;
+  text-shadow: 0 0 4px rgba(0, 240, 255, 0.7), 0 0 10px rgba(0, 240, 255, 0.35);
+}
+
+.crt-glow-orange {
+  color: #ff4800;
+  text-shadow: 0 0 4px rgba(255, 72, 0, 0.75), 0 0 10px rgba(255, 72, 0, 0.4);
+}
+
+.crt-glow-yellow {
+  color: #ffcc00;
+  text-shadow: 0 0 4px rgba(255, 204, 0, 0.75), 0 0 10px rgba(255, 204, 0, 0.35);
+}
+
+.crt-glow-green {
+  color: #33ff77;
+  text-shadow: 0 0 4px rgba(51, 255, 119, 0.75), 0 0 10px rgba(51, 255, 119, 0.35);
+}
+
+/* Scanlines overlay */
+.crt-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.38) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Subtle CRT flicker */
+@keyframes crt-flicker {
+  0% { opacity: 0.985; }
+  50% { opacity: 1; }
+  52% { opacity: 0.96; }
+  54% { opacity: 1; }
+  80% { opacity: 0.99; }
+  100% { opacity: 0.985; }
+}
+
+.crt-screen-active {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* CRT Screen barrel curvature vignette */
+.crt-vignette {
+  background: radial-gradient(circle at center, transparent 65%, rgba(0, 0, 0, 0.8) 100%);
+  pointer-events: none;
+}
+
+/* Back to the Future 3D slanted logo style */
+.bttf-font-title {
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  font-style: italic;
+  font-weight: 900;
+  text-transform: uppercase;
+  transform: skewX(-12deg);
+}
+
+/* Custom scrollbars for retro lists */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 15, 25, 0.7);
+}
+::-webkit-scrollbar-thumb {
+  background: #ff5500;
+  border-radius: 0px;
+}
