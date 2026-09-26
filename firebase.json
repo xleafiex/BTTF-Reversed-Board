@@ -1,0 +1,6 @@
+{
+  "firestore": {
+    "database": "ai-studio-backtothefuturer-fe9ebb3b-2475-4b29-b001-6ac80fc5008e",
+    "rules": "firestore.rules"
+  }
+}

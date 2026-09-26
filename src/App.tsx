@@ -59,13 +59,7 @@ export default function App() {
     const unsubscribeBugs = subscribeToBugs(
       (incomingBugs) => {
         setIsCloudConnected(true);
-        setBugs((prev) => {
-          if (incomingBugs.length > 0) {
-            return incomingBugs;
-          }
-          // If Firestore collection has no documents yet, retain existing local reports
-          return prev;
-        });
+        setBugs(incomingBugs);
       },
       (err) => {
         console.warn('Operating in offline/local mode for bugs:', err);
@@ -75,13 +69,7 @@ export default function App() {
     const unsubscribeFeatures = subscribeToFeatures(
       (incomingFeatures) => {
         setIsCloudConnected(true);
-        setFeatures((prev) => {
-          if (incomingFeatures.length > 0) {
-            return incomingFeatures;
-          }
-          // If Firestore collection has no documents yet, retain existing local features
-          return prev;
-        });
+        setFeatures(incomingFeatures);
       },
       (err) => {
         console.warn('Operating in offline/local mode for features:', err);
@@ -659,6 +647,7 @@ export default function App() {
           setActivePanel('bugs');
           try {
             await createBugReport(newBug);
+            setBugs((prev) => [newBug, ...prev.filter((bug) => bug.id !== newBug.id)]);
             setOutputLog((prev) => [
               ...prev,
               `> [CLOUD SYNC] NEW BUG REPORT TRANSMITTED TO MAINFRAME: "${newBug.title}"`,
@@ -682,6 +671,7 @@ export default function App() {
           setActivePanel('features');
           try {
             await createFeatureRequest(newFeat);
+            setFeatures((prev) => [newFeat, ...prev.filter((feature) => feature.id !== newFeat.id)]);
             setOutputLog((prev) => [
               ...prev,
               `> [CLOUD SYNC] NEW FEATURE PROPOSAL BROADCAST TO ALL TIMELINES: "${newFeat.title}"`,

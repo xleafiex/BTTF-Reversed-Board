@@ -1,12 +1,12 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { initializeFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Initialize or reuse Firebase App
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // Initialize Firestore with specific database ID if configured
-export const db = initializeFirestore(app, {}, firebaseConfig.firestoreDatabaseId || '(default)');
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 
 // Stable anonymous voter device ID stored in localStorage so each user can vote once per item
 export function getOrCreateDeviceId(): string {
