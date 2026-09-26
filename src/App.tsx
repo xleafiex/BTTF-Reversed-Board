@@ -13,11 +13,21 @@ import { SubmitIdeaModal } from './components/SubmitIdeaModal';
 import { FullReportModal } from './components/FullReportModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { AdminLoginModal } from './components/AdminLoginModal';
+import {
+  subscribeToBugs,
+  subscribeToFeatures,
+  createBugReport,
+  createFeatureRequest,
+  toggleBugVote,
+  toggleFeatureVote,
+  updateItemStatus,
+  deleteItem,
+} from './services/boardService';
 
 const ADMIN_PASSWORD = 'xleafiex';
 
 export default function App() {
-  // Persistent or stateful items (Fresh clean board)
+  // Real-time cloud synced lists with fallback
   const [bugs, setBugs] = useState<BugReport[]>(() => {
     const saved = localStorage.getItem('bttfr_bugs_clean');
     if (saved) {
@@ -41,6 +51,36 @@ export default function App() {
     }
     return INITIAL_FEATURE_REQUESTS;
   });
+
+  const [isCloudConnected, setIsCloudConnected] = useState(false);
+
+  // Subscribe to real-time Firestore updates
+  useEffect(() => {
+    const unsubscribeBugs = subscribeToBugs(
+      (incomingBugs) => {
+        setIsCloudConnected(true);
+        setBugs(incomingBugs);
+      },
+      (err) => {
+        console.warn('Operating in offline/local mode for bugs:', err);
+      }
+    );
+
+    const unsubscribeFeatures = subscribeToFeatures(
+      (incomingFeatures) => {
+        setIsCloudConnected(true);
+        setFeatures(incomingFeatures);
+      },
+      (err) => {
+        console.warn('Operating in offline/local mode for features:', err);
+      }
+    );
+
+    return () => {
+      unsubscribeBugs();
+      unsubscribeFeatures();
+    };
+  }, []);
 
   // Current selections
   const [selectedBugId, setSelectedBugId] = useState<string>('');
@@ -89,64 +129,75 @@ export default function App() {
     localStorage.setItem('bttfr_is_admin', isAdmin ? 'true' : 'false');
   }, [isAdmin]);
 
-  // Support / Vote action
-  const handleVote = useCallback(() => {
+  // Support / Vote action (synced to Firestore for all users)
+  const handleVote = useCallback(async () => {
     sound.playVote();
     if (activePanel === 'bugs') {
       if (!currentBug.id) return;
-      setBugs((prev) =>
-        prev.map((b) => {
-          if (b.id === currentBug.id) {
-            const nextHasVoted = !b.hasVoted;
-            return {
-              ...b,
-              votes: nextHasVoted ? b.votes + 1 : Math.max(0, b.votes - 1),
-              hasVoted: nextHasVoted,
-            };
-          }
-          return b;
-        })
-      );
-      setOutputLog((prev) => [
-        ...prev,
-        `> VOTE REGISTERED FOR BUG #${currentBug.id.toUpperCase()}: "${currentBug.title}". NEW TOTAL: ${
-          currentBug.hasVoted ? currentBug.votes - 1 : currentBug.votes + 1
-        }`,
-      ]);
+      try {
+        const voted = await toggleBugVote(currentBug);
+        setOutputLog((prev) => [
+          ...prev,
+          `> [CLOUD] VOTE ${voted ? 'REGISTERED' : 'RETRACTED'} FOR BUG #${currentBug.id.toUpperCase()}: "${currentBug.title}".`,
+        ]);
+      } catch (err) {
+        // Fallback local update if network issues
+        setBugs((prev) =>
+          prev.map((b) => {
+            if (b.id === currentBug.id) {
+              const nextHasVoted = !b.hasVoted;
+              return {
+                ...b,
+                votes: nextHasVoted ? b.votes + 1 : Math.max(0, b.votes - 1),
+                hasVoted: nextHasVoted,
+              };
+            }
+            return b;
+          })
+        );
+      }
     } else {
       if (!currentFeature.id) return;
-      setFeatures((prev) =>
-        prev.map((f) => {
-          if (f.id === currentFeature.id) {
-            const nextHasVoted = !f.hasVoted;
-            return {
-              ...f,
-              votes: nextHasVoted ? f.votes + 1 : Math.max(0, f.votes - 1),
-              hasVoted: nextHasVoted,
-            };
-          }
-          return f;
-        })
-      );
-      setOutputLog((prev) => [
-        ...prev,
-        `> SUPPORT LOGGED FOR IDEA #${currentFeature.id.toUpperCase()}: "${currentFeature.title}". NEW TOTAL: ${
-          currentFeature.hasVoted ? currentFeature.votes - 1 : currentFeature.votes + 1
-        }`,
-      ]);
+      try {
+        const voted = await toggleFeatureVote(currentFeature);
+        setOutputLog((prev) => [
+          ...prev,
+          `> [CLOUD] SUPPORT ${voted ? 'LOGGED' : 'RETRACTED'} FOR IDEA #${currentFeature.id.toUpperCase()}: "${currentFeature.title}".`,
+        ]);
+      } catch (err) {
+        // Fallback local update if network issues
+        setFeatures((prev) =>
+          prev.map((f) => {
+            if (f.id === currentFeature.id) {
+              const nextHasVoted = !f.hasVoted;
+              return {
+                ...f,
+                votes: nextHasVoted ? f.votes + 1 : Math.max(0, f.votes - 1),
+                hasVoted: nextHasVoted,
+              };
+            }
+            return f;
+          })
+        );
+      }
     }
   }, [activePanel, currentBug, currentFeature]);
 
-  // Admin status update handler
-  const handleUpdateStatus = useCallback((id: string, newStatus: string, isBugItem: boolean) => {
-    if (isBugItem) {
-      setBugs((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status: newStatus as any } : b))
-      );
-    } else {
-      setFeatures((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, status: newStatus as any } : f))
-      );
+  // Admin status update handler (synced to Firestore)
+  const handleUpdateStatus = useCallback(async (id: string, newStatus: string, isBugItem: boolean) => {
+    try {
+      await updateItemStatus(id, newStatus, isBugItem);
+    } catch {
+      // Local optimistic fallback
+      if (isBugItem) {
+        setBugs((prev) =>
+          prev.map((b) => (b.id === id ? { ...b, status: newStatus as any } : b))
+        );
+      } else {
+        setFeatures((prev) =>
+          prev.map((f) => (f.id === id ? { ...f, status: newStatus as any } : f))
+        );
+      }
     }
     setOutputLog((prev) => [
       ...prev,
@@ -154,24 +205,29 @@ export default function App() {
     ]);
   }, []);
 
-  // Admin delete topic handler
-  const handleDeleteTopic = useCallback((id: string, isBugItem: boolean) => {
-    if (isBugItem) {
-      setBugs((prev) => {
-        const next = prev.filter((b) => b.id !== id);
-        if (next.length > 0) setSelectedBugId(next[0].id);
-        return next;
-      });
-    } else {
-      setFeatures((prev) => {
-        const next = prev.filter((f) => f.id !== id);
-        if (next.length > 0) setSelectedFeatureId(next[0].id);
-        return next;
-      });
+  // Admin delete topic handler (synced to Firestore)
+  const handleDeleteTopic = useCallback(async (id: string, isBugItem: boolean) => {
+    try {
+      await deleteItem(id, isBugItem);
+    } catch {
+      // Local optimistic fallback
+      if (isBugItem) {
+        setBugs((prev) => {
+          const next = prev.filter((b) => b.id !== id);
+          if (next.length > 0) setSelectedBugId(next[0].id);
+          return next;
+        });
+      } else {
+        setFeatures((prev) => {
+          const next = prev.filter((f) => f.id !== id);
+          if (next.length > 0) setSelectedFeatureId(next[0].id);
+          return next;
+        });
+      }
     }
     setOutputLog((prev) => [
       ...prev,
-      `> [ADMIN] TOPIC #${id.toUpperCase()} PERMANENTLY PURGED FROM DATABASE.`,
+      `> [ADMIN] TOPIC #${id.toUpperCase()} PERMANENTLY PURGED FROM CLOUD DATABASE.`,
     ]);
   }, []);
 
@@ -526,6 +582,7 @@ export default function App() {
         onF1={() => setIsReportModalOpen(true)}
         onF2={() => setIsIdeaModalOpen(true)}
         isAdmin={isAdmin}
+        isCloudConnected={isCloudConnected}
         onLogout={() => {
           setIsAdmin(false);
           setOutputLog((prev) => [...prev, '> ADMIN LOGGED OUT.']);
@@ -585,28 +642,46 @@ export default function App() {
       <ReportMalfunctionModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
-        onSubmit={(newBug) => {
-          setBugs((prev) => [newBug, ...prev]);
+        onSubmit={async (newBug) => {
           setSelectedBugId(newBug.id);
           setActivePanel('bugs');
-          setOutputLog((prev) => [
-            ...prev,
-            `> NEW BUG REPORT TRANSMITTED: "${newBug.title}" (TOTAL BUGS: ${bugs.length + 1})`,
-          ]);
+          try {
+            await createBugReport(newBug);
+            setOutputLog((prev) => [
+              ...prev,
+              `> [CLOUD SYNC] NEW BUG REPORT TRANSMITTED TO MAINFRAME: "${newBug.title}"`,
+            ]);
+          } catch (err) {
+            console.error('Error writing bug to Firestore:', err);
+            setBugs((prev) => [newBug, ...prev]);
+            setOutputLog((prev) => [
+              ...prev,
+              `> [LOCAL] NEW BUG REPORT SAVED LOCALLY: "${newBug.title}"`,
+            ]);
+          }
         }}
       />
 
       <SubmitIdeaModal
         isOpen={isIdeaModalOpen}
         onClose={() => setIsIdeaModalOpen(false)}
-        onSubmit={(newFeat) => {
-          setFeatures((prev) => [newFeat, ...prev]);
+        onSubmit={async (newFeat) => {
           setSelectedFeatureId(newFeat.id);
           setActivePanel('features');
-          setOutputLog((prev) => [
-            ...prev,
-            `> NEW FEATURE PROPOSAL LOGGED: "${newFeat.title}" (TOTAL IDEAS: ${features.length + 1})`,
-          ]);
+          try {
+            await createFeatureRequest(newFeat);
+            setOutputLog((prev) => [
+              ...prev,
+              `> [CLOUD SYNC] NEW FEATURE PROPOSAL BROADCAST TO ALL TIMELINES: "${newFeat.title}"`,
+            ]);
+          } catch (err) {
+            console.error('Error writing feature to Firestore:', err);
+            setFeatures((prev) => [newFeat, ...prev]);
+            setOutputLog((prev) => [
+              ...prev,
+              `> [LOCAL] NEW FEATURE PROPOSAL SAVED LOCALLY: "${newFeat.title}"`,
+            ]);
+          }
         }}
       />
 

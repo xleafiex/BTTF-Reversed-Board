@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/firebase/firebase-tools/master/schema/firestore-blueprint.json",
+  "collections": [
+    {
+      "name": "bugs",
+      "description": "Community reported bugs and malfunctions for Back to the Future: Reversed",
+      "fields": [
+        { "name": "date", "type": "string", "description": "Short date e.g. 10/24/85" },
+        { "name": "fullDate", "type": "string", "description": "Full date e.g. 10/24/1985" },
+        { "name": "severity", "type": "string", "description": "MINOR, MAJOR, or CRITICAL" },
+        { "name": "title", "type": "string", "description": "Title of malfunction" },
+        { "name": "status", "type": "string", "description": "REPORTED, CONFIRMED, FIXING, FIXED" },
+        { "name": "description", "type": "string", "description": "Detailed explanation" },
+        { "name": "location", "type": "string", "description": "Optional in-game location" },
+        { "name": "reproductionSteps", "type": "array", "description": "List of repro steps" },
+        { "name": "reportedBy", "type": "string", "description": "Callsign of reporter" },
+        { "name": "votes", "type": "number", "description": "Total community support votes" },
+        { "name": "voterIds", "type": "array", "description": "Client IDs that voted for this bug" },
+        { "name": "screenshots", "type": "array", "description": "Attached screenshots array" },
+        { "name": "systemLog", "type": "string", "description": "Diagnostic log text" },
+        { "name": "createdAt", "type": "number", "description": "Unix timestamp in ms" }
+      ]
+    },
+    {
+      "name": "features",
+      "description": "Community suggested feature requests and innovations for Back to the Future: Reversed",
+      "fields": [
+        { "name": "date", "type": "string", "description": "Short date e.g. 10/24/85" },
+        { "name": "fullDate", "type": "string", "description": "Full date e.g. 10/24/1985" },
+        { "name": "title", "type": "string", "description": "Title of idea" },
+        { "name": "status", "type": "string", "description": "SUGGESTED, CONSIDERING, WORKING ON, PLANNED" },
+        { "name": "description", "type": "string", "description": "Detailed description" },
+        { "name": "suggestedBy", "type": "string", "description": "Callsign of suggester" },
+        { "name": "category", "type": "string", "description": "Category name" },
+        { "name": "plannedTimeline", "type": "string", "description": "Target timeline" },
+        { "name": "votes", "type": "number", "description": "Total community support votes" },
+        { "name": "voterIds", "type": "array", "description": "Client IDs that voted for this feature" },
+        { "name": "screenshots", "type": "array", "description": "Attached screenshots array" },
+        { "name": "createdAt", "type": "number", "description": "Unix timestamp in ms" }
+      ]
+    }
+  ]
+}

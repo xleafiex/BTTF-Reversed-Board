@@ -8,6 +8,7 @@ interface HeaderProps {
   onF2: () => void;
   isAdmin: boolean;
   onLogout: () => void;
+  isCloudConnected?: boolean;
 }
 
 export const HeaderLogo: React.FC<HeaderProps> = ({
@@ -15,6 +16,7 @@ export const HeaderLogo: React.FC<HeaderProps> = ({
   onF2,
   isAdmin,
   onLogout,
+  isCloudConnected = true,
 }) => {
   // Live ticking 1985 clock! Starts at WED OCT 23, 1985 10:04 AM
   const [timeStr, setTimeStr] = useState('WED  OCT 23, 1985   10:04 AM');
@@ -46,8 +48,20 @@ export const HeaderLogo: React.FC<HeaderProps> = ({
           <span className="text-[#ff9900] tracking-wider font-semibold">FEEDBACK.EXE</span>
         </div>
 
-        {/* Top Right: Admin Auth Button & 1985 Live Time Display */}
+        {/* Top Right: Cloud Sync Status & Admin Auth Button & 1985 Live Time Display */}
         <div className="flex items-center gap-3 sm:gap-4 text-right">
+          {isCloudConnected ? (
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[#00f0ff] opacity-80 border border-[#00f0ff]/30 px-1.5 py-0.5" title="Connected to Central Hill Valley Mainframe Database">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00f0ff] animate-pulse"></span>
+              <span>MAINFRAME LINK: ONLINE</span>
+            </div>
+          ) : (
+            <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-[#ff9900] border border-[#ff9900]/30 px-1.5 py-0.5" title="Local storage buffer active">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#ff9900]"></span>
+              <span>STANDALONE MODE</span>
+            </div>
+          )}
+
           {isAdmin && (
             <div className="flex items-center gap-1.5 bg-[#33ff77]/10 border border-[#33ff77] px-2 py-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#33ff77] animate-pulse"></span>

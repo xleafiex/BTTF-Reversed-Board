@@ -27,8 +27,10 @@ export interface BugReport {
   reportedBy?: string;
   votes: number;
   hasVoted?: boolean;
+  voterIds?: string[];
   screenshots: ScreenshotItem[];
   systemLog?: string;
+  createdAt?: number;
 }
 
 export interface FeatureRequest {
@@ -37,6 +39,7 @@ export interface FeatureRequest {
   fullDate: string; // e.g. "10/23/1985"
   votes: number;
   hasVoted?: boolean;
+  voterIds?: string[];
   title: string;
   status: FeatureStatus;
   description: string;
@@ -44,6 +47,7 @@ export interface FeatureRequest {
   category?: string;
   plannedTimeline?: string;
   screenshots: ScreenshotItem[];
+  createdAt?: number;
 }
 
 export type ActivePanel = 'bugs' | 'features';
