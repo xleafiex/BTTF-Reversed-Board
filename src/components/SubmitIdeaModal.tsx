@@ -45,6 +45,7 @@ export const SubmitIdeaModal: React.FC<SubmitIdeaModalProps> = ({
       category: category.trim(),
       plannedTimeline: 'Community Backlog',
       screenshots: screenshots,
+      createdAt: Date.now(),
     };
 
     onSubmit(newFeat);

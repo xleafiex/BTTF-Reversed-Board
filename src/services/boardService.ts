@@ -22,15 +22,16 @@ export function subscribeToBugs(
   onError?: (err: Error) => void
 ) {
   const deviceId = getOrCreateDeviceId();
-  const q = query(collection(db, BUGS_COLLECTION), orderBy('createdAt', 'desc'));
+  // Using direct collection snapshot avoids missing-index or missing-field query exclusion
+  const colRef = collection(db, BUGS_COLLECTION);
 
   return onSnapshot(
-    q,
+    colRef,
     (snapshot) => {
       const bugList: BugReport[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        const voterIds: string[] = data.voterIds || [];
+        const voterIds: string[] = Array.isArray(data.voterIds) ? data.voterIds : [];
         bugList.push({
           id: docSnap.id,
           date: data.date || '10/24/85',
@@ -40,16 +41,18 @@ export function subscribeToBugs(
           status: data.status || 'REPORTED',
           description: data.description || '',
           location: data.location || '',
-          reproductionSteps: data.reproductionSteps || [],
+          reproductionSteps: Array.isArray(data.reproductionSteps) ? data.reproductionSteps : [],
           reportedBy: data.reportedBy || 'Anonymous',
           votes: typeof data.votes === 'number' ? data.votes : 0,
           voterIds,
           hasVoted: voterIds.includes(deviceId),
-          screenshots: data.screenshots || [],
+          screenshots: Array.isArray(data.screenshots) ? data.screenshots : [],
           systemLog: data.systemLog || '',
-          createdAt: data.createdAt || 0,
+          createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
         });
       });
+      // Sort newest first
+      bugList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       onUpdate(bugList);
     },
     (err) => {
@@ -67,15 +70,16 @@ export function subscribeToFeatures(
   onError?: (err: Error) => void
 ) {
   const deviceId = getOrCreateDeviceId();
-  const q = query(collection(db, FEATURES_COLLECTION), orderBy('createdAt', 'desc'));
+  // Using direct collection snapshot avoids missing-index or missing-field query exclusion
+  const colRef = collection(db, FEATURES_COLLECTION);
 
   return onSnapshot(
-    q,
+    colRef,
     (snapshot) => {
       const featList: FeatureRequest[] = [];
       snapshot.forEach((docSnap) => {
         const data = docSnap.data();
-        const voterIds: string[] = data.voterIds || [];
+        const voterIds: string[] = Array.isArray(data.voterIds) ? data.voterIds : [];
         featList.push({
           id: docSnap.id,
           date: data.date || '10/24/85',
@@ -89,10 +93,12 @@ export function subscribeToFeatures(
           suggestedBy: data.suggestedBy || 'Community Innovator',
           category: data.category || 'General',
           plannedTimeline: data.plannedTimeline || 'Community Backlog',
-          screenshots: data.screenshots || [],
-          createdAt: data.createdAt || 0,
+          screenshots: Array.isArray(data.screenshots) ? data.screenshots : [],
+          createdAt: typeof data.createdAt === 'number' ? data.createdAt : 0,
         });
       });
+      // Sort newest first
+      featList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
       onUpdate(featList);
     },
     (err) => {

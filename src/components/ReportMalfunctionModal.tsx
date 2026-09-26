@@ -51,6 +51,7 @@ export const ReportMalfunctionModal: React.FC<ReportMalfunctionModalProps> = ({
       votes: 1,
       hasVoted: true,
       screenshots: screenshots,
+      createdAt: Date.now(),
       systemLog: `USER_DIAG_REPORT: Recorded by ${reporter.trim()} on OCT 24, 1985. Code: ERR_HV_${Math.floor(
         Math.random() * 900 + 100
       )}.`,

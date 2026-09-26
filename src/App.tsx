@@ -59,7 +59,13 @@ export default function App() {
     const unsubscribeBugs = subscribeToBugs(
       (incomingBugs) => {
         setIsCloudConnected(true);
-        setBugs(incomingBugs);
+        setBugs((prev) => {
+          if (incomingBugs.length > 0) {
+            return incomingBugs;
+          }
+          // If Firestore collection has no documents yet, retain existing local reports
+          return prev;
+        });
       },
       (err) => {
         console.warn('Operating in offline/local mode for bugs:', err);
@@ -69,7 +75,13 @@ export default function App() {
     const unsubscribeFeatures = subscribeToFeatures(
       (incomingFeatures) => {
         setIsCloudConnected(true);
-        setFeatures(incomingFeatures);
+        setFeatures((prev) => {
+          if (incomingFeatures.length > 0) {
+            return incomingFeatures;
+          }
+          // If Firestore collection has no documents yet, retain existing local features
+          return prev;
+        });
       },
       (err) => {
         console.warn('Operating in offline/local mode for features:', err);

@@ -2,34 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isValidBug(data) {
-      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
-             data.description is string && data.description.size() > 0 && data.description.size() <= 5000 &&
-             data.severity in ['MINOR', 'MAJOR', 'CRITICAL'] &&
-             data.status in ['REPORTED', 'CONFIRMED', 'FIXING', 'FIXED'] &&
-             data.votes is number;
-    }
-
-    function isValidFeature(data) {
-      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
-             data.description is string && data.description.size() > 0 && data.description.size() <= 5000 &&
-             data.status in ['SUGGESTED', 'CONSIDERING', 'WORKING ON', 'PLANNED'] &&
-             data.votes is number;
-    }
-
     match /bugs/{bugId} {
-      allow read: if true;
-      allow create: if isValidBug(request.resource.data);
-      allow update: if isValidBug(request.resource.data);
-      allow delete: if true; // Allows admin cleanup
+      allow read, write: if true;
     }
 
     match /features/{featureId} {
-      allow read: if true;
-      allow create: if isValidFeature(request.resource.data);
-      allow update: if isValidFeature(request.resource.data);
-      allow delete: if true; // Allows admin cleanup
+      allow read, write: if true;
     }
   }
 }
+
